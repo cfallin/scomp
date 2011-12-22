@@ -84,7 +84,7 @@ qualifiedIdent = bareIdent + "." + fieldIdent
 integer.setParseAction(lambda tok: ASTConst(float(tok[0])))
 real.setParseAction(lambda tok: ASTConst(float(tok[0])))
 fieldIdent.setParseAction(lambda tok: ASTIdent('', str(tok[0])))
-qualifiedIdent.setParseAction(lambda tok: ASTIdent(str(tok[0]), str(tok[2])))
+qualifiedIdent.setParseAction(lambda tok: ASTIdent(str(tok[0]), tok[2].colname))
 
 operand = Forward()
 baseOperand = real | integer | qualifiedIdent | fieldIdent
@@ -98,13 +98,25 @@ expr = Forward()
 parenExpr = Forward()
 
 parenExpr << ("(" + expr + ")")
-term << ( (operand + '*' + term) | (operand + '/' + term) | operand | parenExpr)
-expr << ( (term + '+' + expr) | (term + '-' + expr) | term)
+term << ( (operand | parenExpr) + Group(OneOrMore(oneOf('- +') + (operand | parenExpr))) )
+expr << ( (term + Group(OneOrMore(oneOf('* /') + term))) | term )
 
-term.setParseAction(lambda tok: ASTOp(tok[1], tok[0], tok[2]) if len(tok) == 3 else tok[0])
-expr.setParseAction(lambda tok: ASTOp(tok[1], tok[0], tok[2]) if len(tok) == 3 else tok[0])
+def parseSeq(tok):
+    print 'parseSeq', tok
+    astroot = tok[0]
+    tok = tok[1:]
+    while len(tok) >= 2:
+        op, val = tok[0:2]
+        tok = tok[2:]
+        astroot = ASTOp(op, astroot, val)
+    return astroot
+
+term.setParseAction(lambda tok: parseSeq(tok))
+expr.setParseAction(lambda tok: parseSeq(tok))
 parenExpr.setParseAction(lambda tok: tok[1])
 
 ast = expr.parseString('+1--3*(4*5-1)+ra.!IPC-base+!IPC', parseAll=True).asList()[0]
+
+# 58 + 100 - 200 + 100
 
 print ast.evaluate('ra', {'ra.!IPC': 100.0, 'ra.base': 200.0})
