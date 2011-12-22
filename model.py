@@ -1,6 +1,7 @@
 import re
 
 import runs
+import parser
 
 # represents all state
 class model:

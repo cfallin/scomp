@@ -25,17 +25,17 @@
 
     "exprs": [
         ["*", [
-                ["!IPC", "=cycles/core_macroinsns_retired"],
-                ["!coverage", "=prefcache_useful/base.l2_miss"],
-                ["!accuracy", "=prefcache_useful/prefcache_insert"],
-                ["!imp", "=100.0*(!IPC-base.!IPC)/base.!IPC"],
+                ["!IPC", "cycles/core_macroinsns_retired"],
+                ["!coverage", "prefcache_useful/base.l2_miss"],
+                ["!accuracy", "prefcache_useful/prefcache_insert"],
+                ["!imp", "100.0*(!IPC-base.!IPC)/base.!IPC"],
         ]],
 
         ["filtRA*", [
-                ["!fracInsns", "=ra_insn_retired/RA.ra_insn_retired"],
-                ["!fracPerf", "=(!IPC-base.!IPC)/(RA.!IPC-base.!IPC)"],
-                ["!fracCoverage", "=!coverage/RA.!coverage"],
-                ["!fracAccuracy", "=!accuracy/RA.!accuracy"],
+                ["!fracInsns", "ra_insn_retired/RA.ra_insn_retired"],
+                ["!fracPerf", "(!IPC-base.!IPC)/(RA.!IPC-base.!IPC)"],
+                ["!fracCoverage", "!coverage/RA.!coverage"],
+                ["!fracAccuracy", "!accuracy/RA.!accuracy"],
          ]],
     ],
 
