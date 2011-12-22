@@ -1,53 +1,71 @@
-def parse(s, configname, ctx):
+class Expr:
+    def __init__(self):
+        self.tokens = []
+        self.deps = []
+        self.idxmap = {}
 
-    # tokenize
-    tokens = []
-    in_name = False
-    name = ''
-    for c in s:
-        if in_name:
-            if c.isalnum() or c == '.' or c == '!' or c == '_':
-                name += c
+    def parse(self, s, configname):
+
+        # tokenize
+        tokens = []
+        in_name = False
+        name = ''
+        for c in s:
+            if in_name:
+                if c.isalnum() or c == '.' or c == '!' or c == '_':
+                    name += c
+                else:
+                    tokens.append((True, name))
+                    name = ''
+                    in_name = False
+            if not in_name:
+                if c.isalpha() or c == '!' or c == '_':
+                    in_name = True
+                    name = c
+                else:
+                    tokens.append((False, c))
+
+        if name != '':
+            tokens.append((True, name))
+
+        # resolve names
+        out = []
+        deps = set()
+        idxmap = {}
+        for pair in tokens:
+            if pair[0]: # if it's a name
+                name = pair[1]
+                if not '.' in name:
+                    name = configname + '.' + name
+                deps.add(name)
+                if not idxmap.has_key(name): idxmap[name] = []
+                idxmap[name].append(len(out))
+                out.append(name)
             else:
-                tokens.append((True, name))
-                name = ''
-                in_name = False
-        if not in_name:
-            if c.isalpha() or c == '!' or c == '_':
-                in_name = True
-                name = c
-            else:
-                tokens.append((False, c))
+                out.append(pair[1])
 
-    if name != '':
-        tokens.append((True, name))
+        self.tokens = out
+        self.deps = deps
+        self.idxmap = idxmap
 
-    print 'tokenized: ', tokens
+        # return list of dependencies
+        return list(self.deps)
 
-    # substitute
-    out = []
-    for pair in tokens:
-        if pair[0]:
-            name = pair[1]
-            print 'name', name
-            if not '.' in name:
-                name = configname + '.' + name
-            print 'resolved to', name
-            if not ctx.has_key(name):
-                raise "Unknown variable " + name
-            else:
-                print 'with value', ctx[name]
-                out.append(str(ctx[name]))
-        else:
-            out.append(pair[1])
+    def evaluate(self, ctx):
 
-    # reconstruct original expr
-    s = ''.join(out)
+        # substitute values for names
+        out = list(self.tokens)
+        for key in self.idxmap.keys():
+            val = ctx[key]
+            for idx in self.idxmap[key]:
+                out[idx] = str(val)
 
-    print 'subbed: ', s
+        # reconstruct original expr and evaluate it
+        s = ''.join(out)
+        return eval(s, {}, {})
 
-    return eval(s, {}, {})
-
-print parse('+1--3*(4*5-1)+ra.!IPC-base+!IPC+ra','ra', {'ra.!IPC': 100.0, 'ra.base': 200.0, 'ra.ra': 300})
-
-# 58 + 100 - 200 + 100
+# --- test
+# p = Expr()
+# deps = p.parse('+1--3*(4*5-1)+ra.!IPC-base+!IPC+ra','ra')
+# print 'deps: ', deps
+# print p.evaluate({'ra.!IPC': 100.0, 'ra.base': 200.0, 'ra.ra': 300})
