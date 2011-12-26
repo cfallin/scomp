@@ -28,7 +28,7 @@ class Expr:
         if name != '':
             tokens.append((True, name))
 
-        # resolve names
+        # find names in token list
         out = []
         deps = set()
         idxmap = {}

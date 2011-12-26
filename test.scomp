@@ -49,19 +49,19 @@
                     "style": "groupbar",
                     "configs": ["*"],
                     "y": "!IPC",
-                    "avg": ["arithmetic", "exclude-missing"],
+                    "avg": ["arithmetic"],
                 }],
        ["coverage", {
                     "style": "groupbar",
                     "configs": ["RA", "pref", "filtRA", "filtRAC", "SA4", "SA5", "SA5multi"],
                     "y": "!coverage",
-                    "avg": ["arithmetic", "exclude-missing"],
+                    "avg": ["arithmetic"],
                }],
        ["accuracy", {
                     "style": "groupbar",
                     "configs": ["RA", "pref", "filtRA", "filtRAC", "SA4", "SA5", "SA5multi"],
                     "y": "!accuracy",
-                    "avg": ["arithmetic", "exclude-missing"],
+                    "avg": ["arithmetic"],
                }],
     ],
 }
