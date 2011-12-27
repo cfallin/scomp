@@ -9,6 +9,7 @@ import glob
 class Run:
     def __init__(self, filename, statmap):
         self.missing = True
+        self.filename = filename
         try:
             self.dobj = json.load(open(filename))
             self.missing = False
@@ -24,7 +25,7 @@ class Run:
             if t is None: continue
             opts = self.statmap.opts[statname] if self.statmap.opts.has_key(statname) else None
             s = t(self.dobj, statname, opts)
-            self.stats[statname] = t
+            self.stats[statname] = s
 
 # a config is a set of runs over many benchmarks
 class Config:
@@ -43,17 +44,23 @@ class Config:
             self.benches = []
             for d in glob.glob(self.directory + '/*'):
                 if not os.path.isdir(d): continue
-                self.benches.append(d)
+                self.benches.append(os.path.basename(d))
 
         self.extract()
 
     def extract(self):
+        stats = set()
         for b in self.benches:
             if not self.yieldfunc is None:
                 self.yieldfunc()
             f = self._filename(self.directory, b)
             r = Run(f, self.statmap)
             self.runs[b] = r
+            for stat in r.stats.keys():
+                if not stat in stats:
+                    stats.add(stat)
+        self.stats = stats
+
 
     def _filename(self, directory, bench):
         return '%s/%s/sim.out' % (directory, bench)
@@ -77,7 +84,7 @@ class Stat:
         return []
 
 # an AccumStat is a simple event count
-class AccumStat:
+class AccumStat(Stat):
     def extract(self):
         o = self.dobj[self.name]
         if type(o) == type({}):
@@ -86,7 +93,10 @@ class AccumStat:
             self._val = float(o)
         elif type(o) == type([]):
             if len(o) == 1:
-                self._val = float(o[0])
+                if type(o[0]) == type({}):
+                    self._val = o[0]['avg']
+                else:
+                    self._val = o[0]
             else:
                 self._val = 0.0
 
@@ -97,7 +107,7 @@ class AccumStat:
         return 
 
 # a DistStat is a distribution
-class DistStat:
+class DistStat(Stat):
     def extract(self):
         o = self.dobj[self.name]
         if type(o) == type([]):
@@ -107,7 +117,7 @@ class DistStat:
             for i in range(len(o)):
                 c += o[i]
                 self._mean += i * o[i]
-            if c > 0: self.mean /= c
+            if c > 0: self._mean /= c
         else:
             self._vals = []
             self._mean = 0.0

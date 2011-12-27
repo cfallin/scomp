@@ -25,7 +25,7 @@
 
     "exprs": [
         ["*", [
-                ["!IPC", "cycles/core_macroinsns_retired"],
+                ["!IPC", "core_macroinsn_retired/cycles"],
                 ["!coverage", "prefcache_useful/base.l2_miss"],
                 ["!accuracy", "prefcache_useful/prefcache_insert"],
                 ["!imp", "100.0*(!IPC-base.!IPC)/base.!IPC"]

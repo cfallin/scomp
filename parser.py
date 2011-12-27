@@ -62,7 +62,10 @@ class Expr:
 
         # reconstruct original expr and evaluate it
         s = ''.join(out)
-        return eval(s, {}, {})
+        try:
+            return eval(s, {}, {})
+        except:
+            return None
 
 # --- test
 # p = Expr()

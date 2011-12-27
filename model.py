@@ -30,6 +30,7 @@ class model:
         self.configlist = []
 
         benchsets = []
+        statssets = []
         for c in prog['configs']:
             longname = c[0]
             shortname = c[1]
@@ -37,16 +38,31 @@ class model:
             cfg = runs.Config(datadir + '/' + longname)
             self.configs[shortname] = cfg
             self.configlist.append(shortname)
-            self.exprs[c] = {}
+            self.exprs[shortname] = {}
             benchsets.append(set(cfg.benches))
+            statssets.append(cfg.stats)
 
         # take union of all available benches
         self.benches = reduce(lambda x,y: x | y, benchsets)
         # also produce list of benches for which all results are present
         self.benches_all = reduce(lambda x,y: x & y, benchsets)
 
-        # save the list of stats
-        self.stats = prog['stats']
+        stats_any = reduce(lambda x,y: x | y, statssets)
+        stats_all = reduce(lambda x,y: x & y, statssets)
+
+        # get the list of stats
+        statsmatchers = []
+        for x in prog['stats']:
+            x = '^' + x.replace('*', '.*') + '$'
+            r = re.compile(x)
+            statsmatchers.append(r)
+
+        self.stats = []
+        for m in statsmatchers:
+            matching = filter(lambda x: m.match(x), stats_any)
+            for x in matching:
+                if not x in self.stats:
+                    self.stats.append(x)
 
         # read the list of exprs, matching and applying to appropriate configs
         self.exprlist = []
@@ -61,19 +77,14 @@ class model:
                         self.exprs[c][name] = Expr()
                         self.exprs[c][name].parse(expr, c)
 
-        # parse exprs, construct dependences and worklist
+        # parse exprs, construct dependences
         deps = {} # dict of lists
         affects = {} # dist of lists
-        exprs = {} # list of Expr indexed by fullname
-        vals = {} # current values
         for c in self.configlist:
             for name in self.exprs[c].keys():
                 fullname = c + '.' + name
-                worklist.add(fullname)
-                exprs[fullname] = self.exprs[c][name]
                 affects[fullname] = []
                 deps[fullname] = self.exprs[c][name].deps
-                vals[fullname] = None
 
         # get forward flow from backward flow
         for x in deps.keys():
@@ -95,28 +106,36 @@ class model:
         # produce list of stat vals
         for c in self.configlist:
             for s in self.stats:
-                if self.configs[c].runs.has_key(bench):
-                    val = self.configs[c].runs[bench].stats[s]
+                if self.configs[c].runs.has_key(bench) and self.configs[c].runs[bench].stats.has_key(s):
+                    st = self.configs[c].runs[bench].stats[s]
+                    val = st.value()
                 else:
                     val = 0.0
                 vals[c + '.' + s] = val
 
         # produce list of all exprs
         worklist = set()
+        exprs = {} # list of Expr indexed by fullname
         for c in self.configlist:
             for name in self.exprs[c].keys():
                 fullname = c + '.' + name
                 worklist.add(fullname)
+                exprs[fullname] = self.exprs[c][name]
+                vals[fullname] = 0.0
 
         # parse and evaluate all exprs
         while len(worklist) > 0:
             w = worklist.pop()
             e = exprs[w]
-            oldval = vals[w]
-            newval = e.evaluate(dict(vals.items() + statvals.items()))
+            if vals.has_key(w):
+                oldval = vals[w]
+            else:
+                oldval = None
+            #print "evaluate: bench", bench, "expr", w, "vals", vals
+            newval = e.evaluate(vals)
             if newval != oldval:
                 vals[w] = newval
-                for dest in affects[w]:
+                for dest in self.affects[w]:
                     worklist.add(dest)
 
         return vals
@@ -136,17 +155,22 @@ class model:
 
             output = open(sheetdir + '/' + name + '.csv', 'w')
 
-            output.write("Bench,Config," + ','.join(self.statlist + self.exprlist) + "\n")
-            for bench in self.benches:
+            output.write("Bench,Config," + ','.join(self.stats + self.exprlist) + "\n")
+
+            b = list(self.benches)
+            b.sort()
+            for bench in b:
                 for c in configs:
                     row = [bench, c]
-                    for stat in self.statlist + self.exprlist:
+                    for stat in self.stats + self.exprlist:
                         fullname = c + '.' + stat
-                        if vals.has_key(fullname):
-                            val = vals[fullname]
+                        if vals[bench].has_key(fullname):
+                            val = vals[bench][fullname]
                         else:
-                            val = 0.0
+                            val = None
+                        if val == None: val = ''
                         row.append(str(val))
                     output.write(','.join(row) + "\n")
+                output.write("\n")
 
             output.close()
