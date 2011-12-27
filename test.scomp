@@ -2,7 +2,7 @@
     "configs": [
         ["100M_base", "base"],
         ["100M_ra_prefcache", "RA"],
-        ["100M_pref_prefcache", "pref"],
+        ["100M_pref_base_prefcache", "pref"],
         ["100M_filtra_prefcache", "filtRA"],
         ["100M_filtra_condbr_prefcache", "filtRAC"],
         ["100M_sa4_prefcache", "SA4"],

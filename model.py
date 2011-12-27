@@ -108,7 +108,7 @@ class model:
             for s in self.stats:
                 if self.configs[c].runs.has_key(bench) and self.configs[c].runs[bench].stats.has_key(s):
                     st = self.configs[c].runs[bench].stats[s]
-                    val = st.value()
+                    val = float(st.value())
                 else:
                     val = 0.0
                 vals[c + '.' + s] = val
@@ -124,6 +124,7 @@ class model:
                 vals[fullname] = 0.0
 
         # parse and evaluate all exprs
+        #print "eval: bench", bench
         while len(worklist) > 0:
             w = worklist.pop()
             e = exprs[w]
@@ -131,11 +132,14 @@ class model:
                 oldval = vals[w]
             else:
                 oldval = None
-            #print "evaluate: bench", bench, "expr", w, "vals", vals
+            #print "evaluate expr", w
             newval = e.evaluate(vals)
+            #print " = ", newval
             if newval != oldval:
                 vals[w] = newval
                 for dest in self.affects[w]:
+                    #if not dest in worklist:
+                    #    print "--> ", dest
                     worklist.add(dest)
 
         return vals
