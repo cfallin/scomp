@@ -34,7 +34,7 @@ class model:
             longname = c[0]
             shortname = c[1]
 
-            cfg = run.Config(datadir + '/' + longname)
+            cfg = runs.Config(datadir + '/' + longname)
             self.configs[shortname] = cfg
             self.configlist.append(shortname)
             self.exprs[c] = {}
@@ -122,7 +122,7 @@ class model:
         return vals
 
     # evaluates all benches, produces sheets
-    def evaluate(self):
+    def evaluate(self, sheetdir):
         vals = {}
         for bench in self.benches:
             vals[bench] = self.evaluate_bench(bench)
@@ -134,7 +134,7 @@ class model:
                 if c == '*': configs.extend(self.configlist)
                 else: configs.append(c)
 
-            output = open(name + '.csv', 'w')
+            output = open(sheetdir + '/' + name + '.csv', 'w')
 
             output.write("Bench,Config," + ','.join(self.statlist + self.exprlist) + "\n")
             for bench in self.benches:

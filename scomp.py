@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import model
 import sys
@@ -7,6 +7,7 @@ import simplejson as json
 def usage():
     sys.stderr.write("""
     Usage: scomp model1.scomp data_dir/ sheet_dir/ model2.scomp ...
+
 """)
 
 def main(args):
@@ -18,20 +19,11 @@ def main(args):
         fname, datadir, sheetdir = args[0:3]
         args = args[3:]
 
-        m = model()
+        m = model.model()
 
-        try:
-            o = json.load(open(fname))
-        except:
-            print "ERROR: Could not load model", fname
-            sys.exit(1)
-
-        try:
-            m.load(datadir, o)
-            m.evaluate()
-        except:
-            print "ERROR: Could not load/evaluate data"
-            sys.exit(1)
+        o = json.load(open(fname))
+        m.load(datadir, o)
+        m.evaluate(sheetdir)
 
 if __name__ == '__main__':
     main(sys.argv[1:])

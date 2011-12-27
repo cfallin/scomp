@@ -7,7 +7,7 @@
         ["100M_filtra_condbr_prefcache", "filtRAC"],
         ["100M_sa4_prefcache", "SA4"],
         ["100M_sa5_prefcache", "SA5"],
-        ["100M_sa5_multi_prefcache", "SA5multi"],
+        ["100M_sa5_multi_prefcache", "SA5multi"]
     ],
 
     "stats": [
@@ -20,7 +20,7 @@
         "ra_*",
         "filtra_*",
         "l2_*",
-        "sa_*",
+        "sa_*"
     ],
 
     "exprs": [
@@ -28,20 +28,20 @@
                 ["!IPC", "cycles/core_macroinsns_retired"],
                 ["!coverage", "prefcache_useful/base.l2_miss"],
                 ["!accuracy", "prefcache_useful/prefcache_insert"],
-                ["!imp", "100.0*(!IPC-base.!IPC)/base.!IPC"],
+                ["!imp", "100.0*(!IPC-base.!IPC)/base.!IPC"]
         ]],
 
         ["filtRA*", [
                 ["!fracInsns", "ra_insn_retired/RA.ra_insn_retired"],
                 ["!fracPerf", "(!IPC-base.!IPC)/(RA.!IPC-base.!IPC)"],
                 ["!fracCoverage", "!coverage/RA.!coverage"],
-                ["!fracAccuracy", "!accuracy/RA.!accuracy"],
-         ]],
+                ["!fracAccuracy", "!accuracy/RA.!accuracy"]
+         ]]
     ],
 
     "sheets": [
         ["data_all", ["*"]],
-        ["data_RA", ["base", "pref", "RA", "filtRA", "filtRAC"]],
+        ["data_RA", ["base", "pref", "RA", "filtRA", "filtRAC"]]
     ],
 
     "plots": [
@@ -49,19 +49,19 @@
                     "style": "groupbar",
                     "configs": ["*"],
                     "y": "!IPC",
-                    "avg": ["arithmetic"],
+                    "avg": ["arithmetic"]
                 }],
        ["coverage", {
                     "style": "groupbar",
                     "configs": ["RA", "pref", "filtRA", "filtRAC", "SA4", "SA5", "SA5multi"],
                     "y": "!coverage",
-                    "avg": ["arithmetic"],
+                    "avg": ["arithmetic"]
                }],
        ["accuracy", {
                     "style": "groupbar",
                     "configs": ["RA", "pref", "filtRA", "filtRAC", "SA4", "SA5", "SA5multi"],
                     "y": "!accuracy",
-                    "avg": ["arithmetic"],
-               }],
-    ],
+                    "avg": ["arithmetic"]
+               }]
+    ]
 }
