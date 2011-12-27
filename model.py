@@ -125,4 +125,28 @@ class model:
     def evaluate(self):
         vals = {}
         for bench in self.benches:
+            vals[bench] = self.evaluate_bench(bench)
 
+        for o in self.out_sheets:
+            name, configlist = o[0], o[1]
+            configs = []
+            for c in configlist:
+                if c == '*': configs.extend(self.configlist)
+                else: configs.append(c)
+
+            output = open(name + '.csv', 'w')
+
+            output.write("Bench,Config," + ','.join(self.statlist + self.exprlist) + "\n")
+            for bench in self.benches:
+                for c in configs:
+                    row = [bench, c]
+                    for stat in self.statlist + self.exprlist:
+                        fullname = c + '.' + stat
+                        if vals.has_key(fullname):
+                            val = vals[fullname]
+                        else:
+                            val = 0.0
+                        row.append(str(val))
+                    output.write(','.join(row) + "\n")
+
+            output.close()
