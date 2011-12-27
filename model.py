@@ -144,37 +144,60 @@ class model:
 
         return vals
 
-    # evaluates all benches, produces sheets
-    def evaluate(self, sheetdir):
-        vals = {}
+    # evaluates all benches
+    def evaluate(self):
+        self.vals = {}
         for bench in self.benches:
-            vals[bench] = self.evaluate_bench(bench)
+            self.vals[bench] = self.evaluate_bench(bench)
 
+    # produces sheets
+    def output_sheets(self, sheetdir):
         for o in self.out_sheets:
-            name, configlist = o[0], o[1]
-            configs = []
-            for c in configlist:
-                if c == '*': configs.extend(self.configlist)
-                else: configs.append(c)
+            name, typ, l = o[0], o[1], o[2]
 
             output = open(sheetdir + '/' + name + '.csv', 'w')
 
-            output.write("Bench,Config," + ','.join(self.stats + self.exprlist) + "\n")
+            if typ == 'full':
+                configs = []
+                for c in l:
+                    if c == '*': configs.extend(self.configlist)
+                    else: configs.append(c)
 
-            b = list(self.benches)
-            b.sort()
-            for bench in b:
-                for c in configs:
-                    row = [bench, c]
-                    for stat in self.stats + self.exprlist:
-                        fullname = c + '.' + stat
-                        if vals[bench].has_key(fullname):
-                            val = vals[bench][fullname]
+
+                output.write("Bench,Config," + ','.join(self.stats + self.exprlist) + "\n")
+
+                b = list(self.benches)
+                b.sort()
+                for bench in b:
+                    for c in configs:
+                        row = [bench, c]
+                        for stat in self.stats + self.exprlist:
+                            fullname = c + '.' + stat
+                            if self.vals[bench].has_key(fullname):
+                                val = self.vals[bench][fullname]
+                            else:
+                                val = None
+                            if val == None: val = ''
+                            row.append(str(val))
+                        output.write(','.join(row) + "\n")
+                    output.write("\n")
+
+            elif typ == 'benchsummary':
+                statlist = l
+
+                output.write("Bench," + ','.join(statlist) + "\n")
+
+                b = list(self.benches)
+                b.sort()
+                for bench in b:
+                    row = [bench]
+                    for stat in statlist:
+                        if self.vals[bench].has_key(stat):
+                            val = self.vals[bench][stat]
                         else:
                             val = None
                         if val == None: val = ''
                         row.append(str(val))
                     output.write(','.join(row) + "\n")
-                output.write("\n")
 
             output.close()

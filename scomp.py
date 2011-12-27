@@ -23,7 +23,8 @@ def main(args):
 
         o = json.load(open(fname))
         m.load(datadir, o)
-        m.evaluate(sheetdir)
+        m.evaluate()
+        m.output_sheets(sheetdir)
 
 if __name__ == '__main__':
     main(sys.argv[1:])

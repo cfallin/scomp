@@ -28,7 +28,8 @@
                 ["!IPC", "core_macroinsn_retired/cycles"],
                 ["!coverage", "prefcache_useful/base.l2_miss"],
                 ["!accuracy", "prefcache_useful/prefcache_insert"],
-                ["!imp", "100.0*(!IPC-base.!IPC)/base.!IPC"]
+                ["!extra", "ra_insn_retired/core_insn_retired"],
+                ["!imp", "(!IPC-base.!IPC)/base.!IPC"]
         ]],
 
         ["filtRA*", [
@@ -40,8 +41,16 @@
     ],
 
     "sheets": [
-        ["data_all", ["*"]],
-        ["data_RA", ["base", "pref", "RA", "filtRA", "filtRAC"]]
+        ["data_all", "full", ["*"]],
+        ["data_RA", "full", ["base", "pref", "RA", "filtRA", "filtRAC"]],
+        ["summary", "benchsummary",
+            ["pref.!imp", "pref.!coverage", "pref.!accuracy", "pref.!extra",
+             "RA.!imp", "RA.!coverage", "RA.!accuracy", "RA.!extra",
+             "filtRA.!imp", "filtRA.!coverage", "filtRA.!accuracy", "filtRA.!extra",
+             "filtRA.!fracInsns", "filtRA.!fracPerf", "filtRA.!fracCoverage", "filtRA.!fracAccuracy",
+             "filtRAC.!imp", "filtRAC.!coverage", "filtRAC.!accuracy", "filtRAC.!extra",
+             "filtRAC.!fracInsns", "filtRAC.!fracPerf", "filtRAC.!fracCoverage", "filtRAC.!fracAccuracy"
+             ]]
     ],
 
     "plots": [
