@@ -52,10 +52,13 @@ class model:
 
         # get the list of stats
         statsmatchers = []
-        for x in prog['stats']:
-            x = '^' + x.replace('*', '.*') + '$'
-            r = re.compile(x)
-            statsmatchers.append(r)
+        if prog.has_key('stats'):
+            for x in prog['stats']:
+                x = '^' + x.replace('*', '.*') + '$'
+                r = re.compile(x)
+                statsmatchers.append(r)
+        else:
+            statsmatchers.append(re.compile('^.*$'))
 
         self.stats = []
         for m in statsmatchers:
@@ -66,16 +69,17 @@ class model:
 
         # read the list of exprs, matching and applying to appropriate configs
         self.exprlist = []
-        for e in prog['exprs']:
-            config_filter, statlist = e
-            r = re.compile(config_filter.replace('*', '.*'))
-            for c in self.configlist:
-                if r.match(c):
-                    for s in statlist:
-                        name, expr = s
-                        if not name in self.exprlist: self.exprlist.append(name)
-                        self.exprs[c][name] = Expr()
-                        self.exprs[c][name].parse(expr, c)
+        if prog.has_key('exprs'):
+            for e in prog['exprs']:
+                config_filter, statlist = e
+                r = re.compile(config_filter.replace('*', '.*'))
+                for c in self.configlist:
+                    if r.match(c):
+                        for s in statlist:
+                            name, expr = s
+                            if not name in self.exprlist: self.exprlist.append(name)
+                            self.exprs[c][name] = Expr()
+                            self.exprs[c][name].parse(expr, c)
 
         # parse exprs, construct dependences
         deps = {} # dict of lists
@@ -94,8 +98,15 @@ class model:
                     
         self.affects = affects
 
-        self.out_sheets = prog['sheets']
-        self.out_plots = prog['plots']
+        if prog.has_key('sheets'):
+            self.out_sheets = prog['sheets']
+        else:
+            self.out_sheets = [ ['all', 'full', ['*']] ]
+
+        if prog.has_key('plots'):
+            self.out_plots = prog['plots']
+        else:
+            self.out_plots = []
 
     # evaluates vals (stat and computed) for bench and returns dict
     # of values by fullname
