@@ -194,7 +194,21 @@ class model:
                     output.write("\n")
 
             elif typ == 'benchsummary':
-                statlist = l
+
+                # expand statlist
+                statlist = []
+                for elem in l:
+                    if elem.startswith('*.'):
+                        elem = elem[2:]
+                        for c in self.configlist:
+                            if elem.startswith('{'):
+                                for stat in elem[1:-1].split(','):
+                                    stat = stat.strip()
+                                    statlist.append(c + '.' + stat)
+                            else:
+                                statlist.append(c + '.' + elem)
+                    else:
+                        statlist.append(elem)
 
                 output.write("Bench," + ','.join(statlist) + "\n")
 
