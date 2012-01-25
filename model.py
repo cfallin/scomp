@@ -222,7 +222,8 @@ class model:
                         else:
                             val = None
                         if val == None: val = ''
-                        row.append('%f' % val)
+                        else: val = '%f' % val
+                        row.append(val)
                     output.write(','.join(row) + "\n")
 
             output.close()
