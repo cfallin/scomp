@@ -198,17 +198,27 @@ class model:
                 # expand statlist
                 statlist = []
                 for elem in l:
-                    if elem.startswith('*.'):
-                        elem = elem[2:]
+
+                    configspec, statspec = elem.split('.')
+                    clist = []
+                    slist = []
+
+                    if configspec.find('*') != -1:
+                        r = re.compile(configspec.replace('*', '.*'))
                         for c in self.configlist:
-                            if elem.startswith('{'):
-                                for stat in elem[1:-1].split(','):
-                                    stat = stat.strip()
-                                    statlist.append(c + '.' + stat)
-                            else:
-                                statlist.append(c + '.' + elem)
+                            if r.match(c): clist.append(c)
                     else:
-                        statlist.append(elem)
+                        clist.append(configspec)
+                    if statspec.startswith('{'):
+                        for stat in statspec[1:-1].split(','):
+                            stat = stat.strip()
+                            slist.append(stat)
+                    else:
+                        slist.append(statspec)
+
+                    for c in clist:
+                        for s in slist:
+                            statlist.append('%s.%s' % (c, s))
 
                 output.write("Bench," + ','.join(statlist) + "\n")
 
