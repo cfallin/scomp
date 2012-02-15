@@ -48,11 +48,16 @@ class model:
         self.benches_all = reduce(lambda x,y: x & y, benchsets)
 
         if prog.has_key('badbenches'):
-            for b in prog['badbenches']:
-                if b in self.benches:
-                    self.benches.remove(b)
-                if b in self.benches_all:
-                    self.benches_all.remove(b)
+            self.badbenches = prog['badbenches']
+        else:
+            self.badbenches = []
+
+        if prog.has_key('benchmap'):
+            self.benchmap = prog['benchmap']
+        else:
+            self.benchmap = {}
+            for k in self.benches:
+                self.benchmap[k] = k
 
         stats_any = reduce(lambda x,y: x | y, statssets)
         stats_all = reduce(lambda x,y: x & y, statssets)
@@ -202,6 +207,13 @@ class model:
 
             elif typ == 'benchsummary':
 
+                benchmap = self.benchmap
+                benchnames = benchmap.values()
+                benchnames.sort()
+                benchinv = {}
+                for k, v in benchmap.items():
+                    benchinv[v] = k
+
                 # expand statlist
                 statlist = []
                 for elem in l:
@@ -229,10 +241,11 @@ class model:
 
                 output.write("Bench," + ','.join(statlist) + "\n")
 
-                b = list(self.benches)
-                b.sort()
-                for bench in b:
-                    row = [bench]
+                for benchname in benchnames:
+                    bench = benchinv[benchname]
+                    if bench in self.badbenches: continue
+                    if not self.vals.has_key(bench): continue
+                    row = [benchname]
                     for stat in statlist:
                         if self.vals[bench].has_key(stat):
                             val = self.vals[bench][stat]
