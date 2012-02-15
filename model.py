@@ -47,6 +47,13 @@ class model:
         # also produce list of benches for which all results are present
         self.benches_all = reduce(lambda x,y: x & y, benchsets)
 
+        if prog.has_key('badbenches'):
+            for b in prog['badbenches']:
+                if b in self.benches:
+                    self.benches.remove(b)
+                if b in self.benches_all:
+                    self.benches_all.remove(b)
+
         stats_any = reduce(lambda x,y: x | y, statssets)
         stats_all = reduce(lambda x,y: x & y, statssets)
 
