@@ -1,4 +1,5 @@
 import re
+import os
 
 import runs
 from parser import Expr
@@ -35,12 +36,28 @@ class model:
             longname = c[0]
             shortname = c[1]
 
-            cfg = runs.Config(datadir + '/' + longname)
-            self.configs[shortname] = cfg
-            self.configlist.append(shortname)
-            self.exprs[shortname] = {}
-            benchsets.append(set(cfg.benches))
-            statssets.append(cfg.stats)
+            l = []
+            if longname.find('*') != -1:
+                r = re.compile(longname.replace('*', '(.*)'))
+                l = []
+                for d in os.listdir(datadir):
+                    if os.path.isdir(datadir + '/' + d):
+                        m = r.match(d)
+                        if m is None: continue
+                        wildcard = m.groups()[0]
+                        s = shortname.replace('$1', wildcard)
+                        l.append( (d, s) )
+
+            else:
+                l = [ (longname, shortname) ]
+
+            for p in l:
+                cfg = runs.Config(datadir + '/' + p[0])
+                self.configs[p[1]] = cfg
+                self.configlist.append(p[1])
+                self.exprs[p[1]] = {}
+                benchsets.append(set(cfg.benches))
+                statssets.append(cfg.stats)
 
         # take union of all available benches
         self.benches = reduce(lambda x,y: x | y, benchsets)
