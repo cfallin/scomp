@@ -2,7 +2,8 @@
 
 import model
 import sys
-import simplejson as json
+try: import simplejson as json
+except ImportError: import json
 
 def usage():
     sys.stderr.write("""

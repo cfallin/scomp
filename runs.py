@@ -1,6 +1,7 @@
 # dview/datalib/runs.py
 
-import simplejson as json
+try: import simplejson as json
+except ImportError: import json
 import os
 import os.path
 import glob
