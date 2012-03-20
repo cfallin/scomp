@@ -4,35 +4,56 @@ try: import simplejson as json
 except ImportError: import json
 import os
 import os.path
+import sys
 import glob
 
 # a run is a single simulation that produces a collection of stats
 class Run:
-    def __init__(self, filename, statmap):
+    def __init__(self, filename, statmap, rules):
         self.missing = True
         self.filename = filename
         try:
             self.dobj = json.load(open(filename))
-            self.missing = False
+            if self.try_accept(filename, self.dobj, statmap, rules):
+                self.missing = False
+            else:
+                print "reject:", filename
+                self.dobj = {}
         except:
             self.dobj = {}
         self.statmap = statmap
         self.stats = {}
         self.extract()
 
+    def statval(self, dobj, statmap, statname):
+        t = statmap.stattype(statname)
+        if t is None: return None
+        opts = statmap.opts[statname] if statmap.opts.has_key(statname) else None
+        s = t(dobj, statname, opts)
+        return s
+
+    def try_accept(self, filename, dobj, statmap, rules):
+        for r in rules:
+            stat, rel, val = r
+            v = self.statval(dobj, statmap, stat).value()
+            s = "%f %s %f" % (v, rel, val)
+            accept = eval(s)
+            if not accept:
+                return False
+        return True
+
     def extract(self):
         for statname in self.dobj.keys():
-            t = self.statmap.stattype(statname)
-            if t is None: continue
-            opts = self.statmap.opts[statname] if self.statmap.opts.has_key(statname) else None
-            s = t(self.dobj, statname, opts)
+            s = self.statval(self.dobj, self.statmap, statname)
+            if s is None: continue
             self.stats[statname] = s
 
 # a config is a set of runs over many benchmarks
 class Config:
-    def __init__(self, directory, yieldfunc=None, statmap=None, benches=None):
+    def __init__(self, directory, rules, yieldfunc=None, statmap=None, benches=None):
 
         self.directory = directory
+        self.rules = rules
         self.statmap = statmap
         self.benches = benches
         self.runs = {}
@@ -55,7 +76,7 @@ class Config:
             if not self.yieldfunc is None:
                 self.yieldfunc()
             f = self._filename(self.directory, b)
-            r = Run(f, self.statmap)
+            r = Run(f, self.statmap, self.rules)
             self.runs[b] = r
             for stat in r.stats.keys():
                 if not stat in stats:

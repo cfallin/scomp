@@ -30,6 +30,11 @@ class model:
         self.configs = {}
         self.configlist = []
 
+        if prog.has_key('accept'):
+            self.accept_rules = prog['accept']
+        else:
+            self.accept_rules = []
+
         benchsets = []
         statssets = []
         for c in prog['configs']:
@@ -52,7 +57,7 @@ class model:
                 l = [ (longname, shortname) ]
 
             for p in l:
-                cfg = runs.Config(datadir + '/' + p[0])
+                cfg = runs.Config(datadir + '/' + p[0], self.accept_rules)
                 self.configs[p[1]] = cfg
                 self.configlist.append(p[1])
                 self.exprs[p[1]] = {}
