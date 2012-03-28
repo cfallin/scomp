@@ -7,7 +7,7 @@ except ImportError: import json
 
 def usage():
     sys.stderr.write("""
-    Usage: scomp model1.scomp [data_dir/ sheet_dir/] model2.scomp ...
+    Usage: scomp -var VAR=VALUE -var VAR=VALUE model1.scomp [data_dir/ sheet_dir/] model2.scomp ...
 
 Each scompfile can be specified with a data and sheet directory, or
 these can be omitted (and default to 'data/' and 'sheets/' respectively).
@@ -20,6 +20,15 @@ def main(args):
     if len(args) < 1:
         usage()
         sys.exit(1)
+
+    varctx = {}
+    while len(args) >= 2:
+        if args[0] == '-var':
+            varname, varval = map(lambda x: x.strip(), args[1].split('='))
+            varctx[varname] = varval
+            args = args[2:]
+        else:
+            break
 
     shortmode = False
     if len(args) == 1: shortmode = True
@@ -35,7 +44,7 @@ def main(args):
             fname, datadir, sheetdir = args[0:3]
             args = args[3:]
 
-        m = model.model()
+        m = model.model(varctx)
 
         o = json.load(open(fname))
         m.load(datadir, o)

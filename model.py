@@ -6,7 +6,9 @@ from parser import Expr
 
 # represents all state
 class model:
-    def __init__(self):
+    def __init__(self, varctx={}):
+
+        self.varctx = varctx
 
         # data loaded from dataset on disk
         self.configs = {} # indexed by short name
@@ -24,7 +26,25 @@ class model:
         self.out_sheets = []
         self.out_plots = []
 
+    def replvars(self, prog):
+        if type(prog) == type([]):
+            return map(lambda x: self.replvars(x), prog)
+        elif type(prog) == type({}):
+            ret = {}
+            for k in prog:
+                ret[k] = self.replvars(prog[k])
+            return ret
+        elif type(prog) == type(''):
+            for var in self.varctx.keys():
+                prog = prog.replace(var, self.varctx[var])
+            return prog
+        else:
+            return prog
+
     def load(self, datadir, prog): # evaluate the given scomp program
+
+        if len(self.varctx) > 0:
+            prog = self.replvars(prog)
 
         # first load specified configs
         self.configs = {}
