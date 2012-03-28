@@ -56,7 +56,10 @@ class Expr:
         # substitute values for names
         out = list(self.tokens)
         for key in self.idxmap.keys():
-            val = ctx[key]
+            try:
+                val = ctx[key]
+            except:
+                val = 0.0
             for idx in self.idxmap[key]:
                 out[idx] = str(val)
 
