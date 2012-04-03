@@ -34,7 +34,7 @@ class model:
             for k in prog:
                 ret[k] = self.replvars(prog[k])
             return ret
-        elif type(prog) == type(''):
+        elif type(prog) == type('') or type(prog) == type(u''):
             for var in self.varctx.keys():
                 prog = prog.replace(var, self.varctx[var])
             return prog
