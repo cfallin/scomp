@@ -3,6 +3,7 @@ import os
 
 import runs
 from parser import Expr
+import plot
 
 # represents all state
 class model:
@@ -299,3 +300,54 @@ class model:
                     output.write(','.join(row) + "\n")
 
             output.close()
+
+    def output_plots(self, plotdir):
+        benchmap = self.benchmap
+        benchnames = benchmap.values()
+        benchnames.sort()
+        benchinv = {}
+        for k, v in benchmap.items():
+            benchinv[v] = k
+
+        for o in self.out_plots:
+            basename = o[0]
+            cfglist = o[1]
+
+            clist = []
+            for cfgspec in cfglist:
+                r = re.compile(cfgspec.replace('*', '.*'))
+                for c in self.configlist:
+                    if r.match(c): clist.append(c)
+
+            metric = o[2]
+
+            popt = {'AVG': False, 'GEOMEAN': False}
+            for opt in o[3]:
+                popt[opt] = True
+
+            data = []
+
+            for benchname in benchnames:
+                bench = benchinv[benchname]
+                if bench in self.badbenches: continue
+                if not self.vals.has_key(bench): continue
+
+                row = [bench]
+
+                for c in clist:
+                    keyname = c + '.' + metric
+                    if self.vals[bench].has_key(keyname):
+                        val = self.vals[bench][keyname]
+                    else:
+                        val = None
+                    if val == None: val = 0.0
+
+                    row.append(val)
+
+                data.append(row) 
+
+            data = plot.add_avg(data, popt['AVG'], popt['GEOMEAN'])
+
+            plot.write_gnuplot_file(plotdir + '/' + basename, clist, metric, metric)
+            plot.write_data_file(plotdir + '/' + basename, data, clist)
+            plot.plot(plotdir + '/' + basename)

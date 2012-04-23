@@ -7,12 +7,12 @@ except ImportError: import json
 
 def usage():
     sys.stderr.write("""
-    Usage: scomp -var VAR=VALUE -var VAR=VALUE model1.scomp [data_dir/ sheet_dir/] model2.scomp ...
+    Usage: scomp -var VAR=VALUE -var VAR=VALUE model1.scomp [data_dir/ sheet_dir/ plot_dir/] model2.scomp ...
 
-Each scompfile can be specified with a data and sheet directory, or
-these can be omitted (and default to 'data/' and 'sheets/' respectively).
-If more than one scompfile is specified, data and sheet directories must
-be given explicitly.
+Each scompfile can be specified with a data, sheet, and plot directory, or
+these can be omitted (and default to 'data/', 'sheets/' and 'plots/'
+respectively).  If more than one scompfile is specified, data, sheet and plot
+directories must be given explicitly.
 
 """)
 
@@ -40,9 +40,10 @@ def main(args):
             args = args[1:]
             datadir = 'data/'
             sheetdir = 'sheets/'
+            plotdir = 'plots/'
         else:
-            fname, datadir, sheetdir = args[0:3]
-            args = args[3:]
+            fname, datadir, sheetdir, plotdir = args[0:4]
+            args = args[4:]
 
         m = model.model(varctx)
 
@@ -50,6 +51,7 @@ def main(args):
         m.load(datadir, o)
         m.evaluate()
         m.output_sheets(sheetdir)
+        m.output_plots(plotdir)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
