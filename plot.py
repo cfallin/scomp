@@ -37,6 +37,8 @@ def apply_to_columns(data, column_func):
 
 def add_avg(data, mean=False, geomean=False):
 
+    if len(data) == 0: return []
+
     blankrow = [''] + [0.0 for i in range(len(data[0]))]
 
     if mean:
