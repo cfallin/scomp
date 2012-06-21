@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
-import simplejson as json
+try: import simplejson as json
+except ImportError: import json
 import sys
 import os
 import os.path
