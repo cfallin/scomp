@@ -315,7 +315,7 @@ class model:
 
             clist = []
             for cfgspec in cfglist:
-                r = re.compile(cfgspec.replace('*', '.*'))
+                r = re.compile('^' + cfgspec.replace('*', '.*') + '$')
                 for c in self.configlist:
                     if r.match(c): clist.append(c)
 
