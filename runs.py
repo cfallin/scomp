@@ -48,6 +48,31 @@ class Run:
             if s is None: continue
             self.stats[statname] = s
 
+# a multirun is a set of simulations (Runs) of different checkpoints on the same benchmark
+class MultiRun(Run):
+    def __init__(self, runs, weights=None):
+        self.runs = runs
+        self.stats = {}
+        self.weights = weights
+        self.extract()
+
+    def extract(self):
+
+        if len(self.runs) == 0: return
+
+        if self.weights != None: w = self.weights[i]
+        else: w = [1.0 / len(self.runs)] * len(self.runs)
+
+        statkeys = None
+        for r in self.runs:
+            s = set(r.stats.keys())
+            if statkeys == None: statkeys = s
+            else: statkeys = statkeys.intersection(s)
+        stats = {}
+        for s in statkeys:
+            children = map(lambda r: r.stats[s], self.runs)
+            stats[s] = CombinedStat(children, s, {})
+
 # a config is a set of runs over many benchmarks
 class Config:
     def __init__(self, directory, rules, yieldfunc=None, statmap=None, benches=None):
@@ -75,17 +100,37 @@ class Config:
         for b in self.benches:
             if not self.yieldfunc is None:
                 self.yieldfunc()
-            f = self._filename(self.directory, b)
-            r = Run(f, self.statmap, self.rules)
+
+            flist = self.autoconf(self.directory, b)
+
+            runs = []
+            for fi in flist:
+                runs.append(Run(fi, self.statmap, self.rules))
+
+            if len(runs) > 1:
+                r = MultiRun(runs)
+            elif len(runs) == 1:
+                r = runs[0]
+            else:
+                r = Run('/dev/null', self.statmap, self.rules)
+
             self.runs[b] = r
             for stat in r.stats.keys():
                 if not stat in stats:
                     stats.add(stat)
         self.stats = stats
 
-
-    def _filename(self, directory, bench):
-        return '%s/%s/sim.out' % (directory, bench)
+    def autoconf(self, directory, bench):
+        d = '%s/%s' % (directory, bench)
+        if os.path.exists(d + '/sim.out'):
+            return [d + '/sim.out']
+        else:
+            l = []
+            for i in range(20):
+                p = '%s/sim.%d.out' % (d, i)
+                if os.path.exists(p):
+                    l.append(p)
+            return l
 
 # a stat is a metric on a single benchmark run that can have either a scalar or
 # vector value.
@@ -143,6 +188,19 @@ class DistStat(Stat):
         else:
             self._vals = []
             self._mean = 0.0
+
+    def value(self):
+        return self._mean
+
+    def values(self):
+        return self._vals
+
+class CombinedStat(Stat):
+    def extract(self):
+        self._vals = []
+        for s in self.dobj:
+            self._vals.append(s.value())
+        self._mean = sum(self._vals) / len(self._vals) if len(self._vals) > 0 else 0.0
 
     def value(self):
         return self._mean
