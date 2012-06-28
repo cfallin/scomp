@@ -100,7 +100,7 @@ class Config:
             if not multisep:
                 for d in glob.glob(self.directory + '/*'):
                     if not os.path.isdir(d): continue
-                self.benches.append(os.path.basename(d))
+                    self.benches.append(os.path.basename(d))
             else:
                 for d in glob.glob(self.directory + '/*/sim.*.out'):
                     parts = d.split('/')

@@ -4,6 +4,7 @@ import os
 import runs
 from parser import Expr
 import plot
+import glob
 
 # represents all state
 class model:
@@ -98,6 +99,16 @@ class model:
             self.badbenches = prog['badbenches']
         else:
             self.badbenches = []
+
+        if prog.has_key('benchonly') and prog['benchonly'] != '':
+            if multisep:
+                self.benches = set()
+                for d in glob.glob(datadir + '/*/%s/sim.*.out' % (prog['benchonly'])):
+                    parts = d.split('.')
+                    i = int(parts[-2])
+                    self.benches.add(prog['benchonly'] + ('.%d' % i))
+            else:
+                self.benches = set([prog['benchonly']])
 
         if prog.has_key('benchmap'):
             self.benchmap = prog['benchmap']
