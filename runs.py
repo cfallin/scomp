@@ -62,8 +62,8 @@ class MultiRun(Run):
 
         self.missing = False
 
-        if self.weights != None: w = self.weights[i]
-        else: w = [1.0 / len(self.runs)] * len(self.runs)
+        if self.weights != None: w = self.weights
+        else: w = None
 
         statkeys = set()
         for r in self.runs:
@@ -72,7 +72,7 @@ class MultiRun(Run):
         stats = {}
         for s in statkeys:
             children = map(lambda r: r.stats[s] if r.stats.has_key(s) else None, self.runs)
-            stats[s] = CombinedStat(children, s, {})
+            stats[s] = CombinedStat(children, s, {}, w)
 
         self.stats = stats
 
@@ -90,6 +90,9 @@ class Config:
         self.runs = {}
         self.yieldfunc = yieldfunc
         self.multisep = multisep
+
+        self.weights = {}
+        self.read_weights()
 
         if statmap is None:
             self.statmap = StatMap()
@@ -110,6 +113,16 @@ class Config:
 
         self.extract()
 
+    def read_weights(self):
+        fname = self.directory + '/../WEIGHTS.dat'
+        if os.path.exists(fname):
+            for line in open(fname).readlines():
+                parts = line.split()
+                bench = parts[0]
+                weight = float(parts[2])
+                if (not self.weights.has_key(bench)): self.weights[bench] = []
+                self.weights[bench].append(weight)
+
     def extract(self):
         stats = set()
         for b in self.benches:
@@ -117,6 +130,11 @@ class Config:
                 self.yieldfunc()
 
             flist = self.autoconf(self.directory, b)
+            weights = None
+            if self.weights.has_key(b):
+                weights = self.weights[b]
+            elif b.find('.') != -1 and self.weights.has_key(b.split('.', 1)[1]):
+                weights = self.weights[b.split('.', 1)[1]]
 
             runs = []
             for fi in flist:
@@ -124,7 +142,7 @@ class Config:
                 runs.append(r)
 
             if len(runs) > 1:
-                r = MultiRun(runs)
+                r = MultiRun(runs, weights)
             elif len(runs) == 1:
                 r = runs[0]
             else:
@@ -148,10 +166,9 @@ class Config:
             return [d]
         else:
             l = []
-            for i in range(20):
+            for i in range(10):
                 p = '%s/%s/sim.%d.out' % (directory, bench, i)
-                if os.path.exists(p):
-                    l.append(p)
+                l.append(p)
             return l
 
 # a stat is a metric on a single benchmark run that can have either a scalar or
@@ -218,12 +235,25 @@ class DistStat(Stat):
         return self._vals
 
 class CombinedStat(Stat):
+    def __init__(self, dobj, name, opts, weights):
+        self._weights = weights
+        Stat.__init__(self, dobj, name, opts)
+
     def extract(self):
         self._vals = []
+        i = -1
         for s in self.dobj:
+            i += 1
             if s != None:
-                self._vals.append(s.value())
-        self._mean = sum(self._vals) / len(self._vals) if len(self._vals) > 0 else 0.0
+                if self._weights != None:
+                    self._vals.append(s.value() * self._weights[i])
+                else:
+                    self._vals.append(s.value())
+                    
+        if self._weights != None:
+            self._mean = sum(self._vals)
+        else:
+            self._mean = sum(self._vals) / len(self._vals) if len(self._vals) > 0 else 0.0
 
     def value(self):
         return self._mean
