@@ -65,14 +65,13 @@ class MultiRun(Run):
         if self.weights != None: w = self.weights[i]
         else: w = [1.0 / len(self.runs)] * len(self.runs)
 
-        statkeys = None
+        statkeys = set()
         for r in self.runs:
             s = set(r.stats.keys())
-            if statkeys == None: statkeys = s
-            else: statkeys = statkeys.intersection(s)
+            statkeys = statkeys.union(s)
         stats = {}
         for s in statkeys:
-            children = map(lambda r: r.stats[s], self.runs)
+            children = map(lambda r: r.stats[s] if r.stats.has_key(s) else None, self.runs)
             stats[s] = CombinedStat(children, s, {})
 
         self.stats = stats
@@ -222,7 +221,8 @@ class CombinedStat(Stat):
     def extract(self):
         self._vals = []
         for s in self.dobj:
-            self._vals.append(s.value())
+            if s != None:
+                self._vals.append(s.value())
         self._mean = sum(self._vals) / len(self._vals) if len(self._vals) > 0 else 0.0
 
     def value(self):
