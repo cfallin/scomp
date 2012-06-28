@@ -56,6 +56,10 @@ class model:
         else:
             self.accept_rules = []
 
+        multisep = False
+        if prog.has_key('options') and 'multisep' in prog['options']:
+            multisep = True
+
         benchsets = []
         statssets = []
         for c in prog['configs']:
@@ -78,7 +82,7 @@ class model:
                 l = [ (longname, shortname) ]
 
             for p in l:
-                cfg = runs.Config(datadir + '/' + p[0], self.accept_rules)
+                cfg = runs.Config(datadir + '/' + p[0], self.accept_rules, None, None, None, multisep)
                 self.configs[p[1]] = cfg
                 self.configlist.append(p[1])
                 self.exprs[p[1]] = {}

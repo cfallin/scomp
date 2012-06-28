@@ -60,6 +60,8 @@ class MultiRun(Run):
 
         if len(self.runs) == 0: return
 
+        self.missing = False
+
         if self.weights != None: w = self.weights[i]
         else: w = [1.0 / len(self.runs)] * len(self.runs)
 
@@ -73,9 +75,14 @@ class MultiRun(Run):
             children = map(lambda r: r.stats[s], self.runs)
             stats[s] = CombinedStat(children, s, {})
 
+        self.stats = stats
+
+    def try_accept(self, filename, dobj, statmap, rules):
+        return True
+
 # a config is a set of runs over many benchmarks
 class Config:
-    def __init__(self, directory, rules, yieldfunc=None, statmap=None, benches=None):
+    def __init__(self, directory, rules, yieldfunc=None, statmap=None, benches=None, multisep=False):
 
         self.directory = directory
         self.rules = rules
@@ -83,15 +90,24 @@ class Config:
         self.benches = benches
         self.runs = {}
         self.yieldfunc = yieldfunc
+        self.multisep = multisep
 
         if statmap is None:
             self.statmap = StatMap()
 
         if benches is None:
             self.benches = []
-            for d in glob.glob(self.directory + '/*'):
-                if not os.path.isdir(d): continue
+            if not multisep:
+                for d in glob.glob(self.directory + '/*'):
+                    if not os.path.isdir(d): continue
                 self.benches.append(os.path.basename(d))
+            else:
+                for d in glob.glob(self.directory + '/*/sim.*.out'):
+                    parts = d.split('/')
+                    rootname = parts[-2]
+                    idx = int(parts[-1].split('.')[1])
+                    bname = '%s.%d' % (rootname, idx)
+                    self.benches.append(bname)
 
         self.extract()
 
@@ -105,7 +121,8 @@ class Config:
 
             runs = []
             for fi in flist:
-                runs.append(Run(fi, self.statmap, self.rules))
+                r = Run(fi, self.statmap, self.rules)
+                runs.append(r)
 
             if len(runs) > 1:
                 r = MultiRun(runs)
@@ -121,13 +138,19 @@ class Config:
         self.stats = stats
 
     def autoconf(self, directory, bench):
-        d = '%s/%s' % (directory, bench)
-        if os.path.exists(d + '/sim.out'):
-            return [d + '/sim.out']
+        if self.multisep:
+            parts = bench.split('.')
+            benchroot = '.'.join(parts[:-1])
+            idx = int(parts[-1])
+            d = '%s/%s/sim.%d.out' % (directory, benchroot, idx)
+        else:
+            d = '%s/%s/sim.out' % (directory, bench)
+        if os.path.exists(d):
+            return [d]
         else:
             l = []
             for i in range(20):
-                p = '%s/sim.%d.out' % (d, i)
+                p = '%s/%s/sim.%d.out' % (directory, bench, i)
                 if os.path.exists(p):
                     l.append(p)
             return l
