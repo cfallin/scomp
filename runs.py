@@ -55,15 +55,24 @@ class MultiRun(Run):
         self.stats = {}
         self.weights = weights
         self.extract()
+        self.missing = True
 
     def extract(self):
 
         if len(self.runs) == 0: return
 
-        self.missing = False
-
         if self.weights != None: w = self.weights
         else: w = None
+
+        if w != None and len(self.runs) < len(w):
+            return
+        for r in self.runs:
+            if r.missing:
+                return
+            if len(r.stats.keys()) == 0:
+                return
+
+        self.missing = False
 
         statkeys = set()
         for r in self.runs:
@@ -71,7 +80,7 @@ class MultiRun(Run):
             statkeys = statkeys.union(s)
         stats = {}
         for s in statkeys:
-            children = map(lambda r: r.stats[s] if r.stats.has_key(s) else None, self.runs)
+            children = map(lambda r: r.stats[s] if r.stats.has_key(s) else 0.0, self.runs)
             stats[s] = CombinedStat(children, s, {}, w)
 
         self.stats = stats
