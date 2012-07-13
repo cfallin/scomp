@@ -204,7 +204,7 @@ class AccumStat(Stat):
         o = self.dobj[self.name]
         if type(o) == type({}):
             self._val = o['avg']
-        elif type(o) == type(0):
+        elif type(o) == type(0) or type(o) == type(0.0):
             self._val = float(o)
         elif type(o) == type([]):
             if len(o) == 1:
