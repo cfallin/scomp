@@ -3,9 +3,7 @@
         ["10M_BASECONFIG_base", "base"],
 
         ["10M_BASECONFIG_ra", "RA"],
-        ["10M_BASECONFIG_ra_leave2_*", "RA_L_$1"],
         ["10M_BASECONFIG_effra", "RA_e"],
-        ["10M_BASECONFIG_eff_leave2_*", "RA_eL_$1"]
     ],
 
     "stats": [
