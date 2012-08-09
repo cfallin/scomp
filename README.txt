@@ -186,7 +186,7 @@ A scomp expression is actually a full Python expression. scomp begins
 evaluation by loading all raw statistics, setting all composite statistics to
 zero, and then using a worklist-based dataflow evaluation algorithm to evaluate
 expressions and their dependent expressions until a fixpoint is reached. (This
-operation is very similar to a spreedsheat evaluation.)
+operation is very similar to a spreadsheet evaluation.)
 
 Expressions are specified in a list of clauses under the "exprs" key. Each
 clause begins with a string, which can contain wildcards, that specifies to
