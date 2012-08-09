@@ -79,17 +79,14 @@ structure:
          400.perlbench/
               sim.out/
          ...
- </nowiki>
 
 Each 'sim.out' file should have the following data structure. The top-level object should be a dictionary, and each key in the dictionary should be a stat name. Each value associated with a stat can have one of several formats: it can either be a float or int directly, or it can be a dictionary itself, in which case scomp takes the 'avg' key in this sub-dictionary, or it can be a single-element array of either of these types. (scomp reserves the right to support other stat formats in the future, and/or to extract special-purpose information from particular stat types, such as distributions.) A sample simulator output file might be:
 
- <nowiki>
  {
     "cycles": 100000000,
     "foobar_events": [123400],
     "insns_retired": [67012345]
  }
- </nowiki>
 
 === Scompfile ===
 
@@ -103,7 +100,6 @@ each section of directives is given as a particular data structure under a key.
 Most data structures are built as nested lists.
 
 
- <nowiki>
  {
      "configs": [
          ["100M_base", "base"],
@@ -135,7 +131,6 @@ Most data structures are built as nested lists.
               "foobar.!IPC_improvement", "!foobar_rate"]]
      ]
  }
- </nowiki>
 
 ==== Input Specification: Configs and Stats ====
 
