@@ -177,7 +177,7 @@ expressions can refer to any row/column.
 
 3. Composite and raw statistics can be referred to either with a short name
 (e.g., simply "!IPC") or a long name (e.g., "foobar.!IPC"). In the former case,
-the name refers to the "current" benchmark (e.g., the expression
+the name refers to the "current" configuration (e.g., the expression
 "core_insns_retired/cycles" evaluated at a given configuration will load the
 named statistics for that configuration). In the latter case, the statistic is
 loaded from the named configuration.
