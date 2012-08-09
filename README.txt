@@ -15,14 +15,14 @@ scomp is released under the GNU GPL, version 2 only. It is copyright (c)
 scomp is designed to parse the results of ``simulations'' which are performed
 in the course of computer architecture research. Most research in computer
 architecture is performed using simulators which take (i) a set of knobs, or
-configuration parameters, to precisely specify a machine to model, and (ii) a
-benchmark, which is a program that runs on the simulator in order to evaluate
-the performance of the modeled machine. The simulator executes the benchmark
-and produces a set of statistics, or metrics, which represent the behavior of
-the modeled machine (for example, the number of cache misses or branch
+configuration parameters, to specify a machine to model, and (ii) a benchmark,
+which is a program that runs on the simulator in order to evaluate the
+performance of the modeled machine. The simulator executes the benchmark and
+produces a set of statistics, or metrics, which represent the behavior of the
+modeled machine (for example, the number of cache misses or branch
 mispredictions, or cycles taken to execute the benchmark). These metrics are
 the ``measurements'' which inform conclusions about the modeled
-microarchitecture and allow computer architecture to be a rigorous quanitative
+microarchitecture and allow computer architecture to be a rigorous quantitative
 science.
 
 Typically, a researcher proposes a new microarchitectural feature or mechanism
