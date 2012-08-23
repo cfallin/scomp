@@ -65,7 +65,7 @@ def bar_colors(n):
     if n > 4: return ( (n+3)/4 * bar_colors(4) ) [0:n]
 
 # writes gnuplot file for a grouped bargraph of the data.
-def write_gnuplot_file(basename, dirs, stat, title):
+def write_gnuplot_file(basename, dirs, stat, title, opts = {}):
 
     f = open(basename + '.gnuplot', 'w')
 
@@ -84,6 +84,9 @@ set ylabel "%s"
 """ % (basename, title.replace('_', '-'), stat.replace('_', '-')))
 
     colors = bar_colors(len(dirs))
+
+    if 'ylim' in opts:
+        f.write("set yrange [0:%f]\n" % opts['ylim'])
 
     f.write("plot ")
     i = -1

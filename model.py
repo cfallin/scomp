@@ -362,7 +362,11 @@ class model:
                 data.append(row) 
 
             data = plot.add_avg(data, popt['AVG'], popt['GEOMEAN'])
+            if len(o) > 4:
+                opts = o[4]
+            else:
+                opts = {}
 
-            plot.write_gnuplot_file(plotdir + '/' + basename, clist, metric, metric)
+            plot.write_gnuplot_file(plotdir + '/' + basename, clist, metric, metric, opts)
             plot.write_data_file(plotdir + '/' + basename, data, clist)
             plot.plot(plotdir + '/' + basename)
