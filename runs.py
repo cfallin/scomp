@@ -254,7 +254,7 @@ class CombinedStat(Stat):
         for s in self.dobj:
             i += 1
             if s != None:
-                if self._weights != None:
+                if self._weights != None and i < len(self._weights):
                     self._vals.append(s.value() * self._weights[i])
                 else:
                     self._vals.append(s.value())
