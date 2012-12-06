@@ -17,7 +17,7 @@ class Run:
             if self.try_accept(filename, self.dobj, statmap, rules):
                 self.missing = False
             else:
-                print "reject:", filename
+                #print "reject:", filename
                 self.dobj = {}
         except:
             self.dobj = {}
@@ -39,6 +39,7 @@ class Run:
             s = "%f %s %f" % (v, rel, val)
             accept = eval(s)
             if not accept:
+                print "REJECT: file %s: stat '%s': rule %f %s %f" % (filename, stat, v, rel, val)
                 return False
         return True
 
