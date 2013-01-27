@@ -135,6 +135,7 @@ class Config:
 
     def extract(self):
         stats = set()
+        self.benches_present = set()
         for b in self.benches:
             if not self.yieldfunc is None:
                 self.yieldfunc()
@@ -162,6 +163,9 @@ class Config:
             for stat in r.stats.keys():
                 if not stat in stats:
                     stats.add(stat)
+
+            if not r.missing: self.benches_present.add(b)
+
         self.stats = stats
 
     def autoconf(self, directory, bench):

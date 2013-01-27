@@ -62,6 +62,7 @@ class model:
             multisep = True
 
         benchsets = []
+        benchsets_present = []
         statssets = []
         for c in prog['configs']:
             longname = c[0]
@@ -88,12 +89,13 @@ class model:
                 self.configlist.append(p[1])
                 self.exprs[p[1]] = {}
                 benchsets.append(set(cfg.benches))
+                benchsets_present.append(cfg.benches_present)
                 statssets.append(cfg.stats)
 
         # take union of all available benches
         self.benches = reduce(lambda x,y: x | y, benchsets)
         # also produce list of benches for which all results are present
-        self.benches_all = reduce(lambda x,y: x & y, benchsets)
+        self.benches_present = reduce(lambda x,y: x & y, benchsets_present)
 
         if prog.has_key('badbenches'):
             self.badbenches = prog['badbenches']
@@ -116,6 +118,14 @@ class model:
             self.benchmap = {}
             for k in self.benches:
                 self.benchmap[k] = k
+
+        # option: exclude all benchmarks for which some results are not
+        # present.
+        if prog.has_key('options') and prog['options'].has_key('exclude_partial'):
+            for b in self.benches:
+                if not b in self.benches_present:
+                    print "Excluding benchmark with partial results:", b
+            self.benches = self.benches_present
 
         stats_any = reduce(lambda x,y: x | y, statssets)
         stats_all = reduce(lambda x,y: x & y, statssets)
