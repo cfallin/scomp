@@ -5,6 +5,7 @@ import runs
 from parser import Expr
 import plot
 import glob
+import math
 
 # represents all state
 class model:
@@ -309,20 +310,32 @@ class model:
 
                 output.write("Bench," + ','.join(statlist) + "\n")
 
+                geomean = [1.0 for i in range(len(statlist))]
+                arithmean = [0.0 for i in range(len(statlist))]
+
                 for benchname in benchnames:
                     bench = benchinv[benchname]
                     if bench in self.badbenches: continue
                     if not self.vals.has_key(bench): continue
                     row = [benchname]
+                    idx = 0
                     for stat in statlist:
                         if self.vals[bench].has_key(stat):
                             val = self.vals[bench][stat]
                         else:
                             val = None
-                        if val == None: val = ''
-                        else: val = '%f' % val
-                        row.append(val)
+                        if val == None: sval = ''
+                        else: sval = '%f' % val
+                        row.append(sval)
+                        if val != None:
+                            geomean[idx] *= math.pow(val, 1.0 / len(benchnames))
+                            arithmean[idx] += val / len(benchnames)
+                        idx += 1
                     output.write(','.join(row) + "\n")
+
+                output.write("\n")
+                output.write("GEOMEAN,%s\n" % (','.join(map(str, geomean))))
+                output.write("AVG,%s\n" % (','.join(map(str, arithmean))))
 
             output.close()
 
