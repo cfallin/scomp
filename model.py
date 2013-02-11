@@ -64,6 +64,8 @@ class model:
 
         benchsets = []
         benchsets_present = []
+        benchsets_absent = {}
+        confignames = []
         statssets = []
         for c in prog['configs']:
             longname = c[0]
@@ -89,14 +91,22 @@ class model:
                 self.configs[p[1]] = cfg
                 self.configlist.append(p[1])
                 self.exprs[p[1]] = {}
+                confignames.append(p[1])
                 benchsets.append(set(cfg.benches))
                 benchsets_present.append(cfg.benches_present)
                 statssets.append(cfg.stats)
+
 
         # take union of all available benches
         self.benches = reduce(lambda x,y: x | y, benchsets)
         # also produce list of benches for which all results are present
         self.benches_present = reduce(lambda x,y: x & y, benchsets_present)
+
+        # determine which configs are missing each partial result
+        for i in range(len(confignames)):
+            for absent in (self.benches - benchsets_present[i]):
+                if not benchsets_absent.has_key(absent): benchsets_absent[absent] = set()
+                benchsets_absent[absent].add(confignames[i])
 
         if prog.has_key('badbenches'):
             self.badbenches = prog['badbenches']
@@ -125,7 +135,7 @@ class model:
         if prog.has_key('options') and prog['options'].has_key('exclude_partial'):
             for b in self.benches:
                 if not b in self.benches_present:
-                    print "Excluding benchmark with partial results:", b
+                    print "Excluding benchmark with partial results:", b, "(missing: ", ','.join(benchsets_absent[b]), ")"
             self.benches = self.benches_present
 
         stats_any = reduce(lambda x,y: x | y, statssets)
