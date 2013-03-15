@@ -14,6 +14,11 @@ class Run:
         self.filename = filename
         try:
             self.dobj = json.load(open(filename))
+            self.pobj = None
+            pname = os.path.dirname(filename) + '/power.out'
+            if os.path.exists(pname):
+                self.pobj = json.load(open(pname))
+                self.dobj.update(self.pobj)
             if self.try_accept(filename, self.dobj, statmap, rules):
                 self.missing = False
             else:
