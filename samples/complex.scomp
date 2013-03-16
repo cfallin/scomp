@@ -1,0 +1,108 @@
+{
+    "options": { "exclude_partial": true },
+
+    "configs": [
+        ["base", "base"],
+
+        ["base_wide", "base_wide"],
+        ["base_wide64", "base_wide64"],
+
+        ["base_clustered_rs256_size16", "base_clustered_rs256_size16"],
+        ["base_clustered_rs256_size64", "base_clustered_rs256_size64"],
+        ["base_clustered_rob1024_rs256_size16", "base_clustered_rob1024_rs256_size16"],
+        ["base_clustered_rob1024_rs256_size64", "base_clustered_rob1024_rs256_size64"],
+        ["base_clustered_rob1024_rs1024_size16", "base_clustered_rob1024_rs1024_size16"],
+        ["base_clustered_rob1024_rs1024_size64", "base_clustered_rob1024_rs1024_size64"]
+    ],
+
+    "stats": [
+        "cycles",
+        "exec_*",
+        "insns_retired",
+        "rob_*",
+        "l1d_*",
+        "l2_*",
+        "runahead_*",
+        "mem_*",
+        "nukes",
+        "serializes",
+        "syscalls",
+        "power_*",
+        "total_power*"
+    ],
+
+    "exprs": [
+        ["*", [
+                ["!IPC", "insns_retired/cycles"],
+                ["!imp_IPC", "(!IPC-base.!IPC)/base.!IPC"],
+                ["!energy_eff", "!IPC/total_power"]
+        ]]
+    ],
+
+    "accept": [
+        ["insns_retired", ">=", 1000000],
+        ["nukes", "<", 10]
+        ],
+
+    "sheets": [
+        ["results_detailed", "full", ["*"]],
+        ["results", "benchsummary", [
+        "*.!IPC",
+        "*.total_power",
+        "*.total_power_dynamic",
+        "*.total_power_static",
+        "*.!energy_eff"
+        ]],
+
+        ["results_avg", "benchsummary", [
+        "*.!IPC",
+        "*.total_power",
+        "*.total_power_dynamic",
+        "*.total_power_static",
+        "*.!energy_eff"
+        ], ["avg_grid"]],
+
+        ["power", "benchsummary", [
+        "base.cycles",
+        "base.total_power",
+        "base.power_BP",
+        "base.power_Decoder",
+        "base.power_FE_icache",
+        "base.power_FE_icache_miss",
+        "base.power_L2",
+        "base.power_MemExec",
+        "base.power_OOO_Exec_ALU",
+        "base.power_OOO_Exec_FPU",
+        "base.power_OOO_Exec_MUL",
+        "base.power_OOO_FrontFreeList",
+        "base.power_OOO_FrontRAT",
+        "base.power_OOO_PipeRegs",
+        "base.power_OOO_RF",
+        "base.power_OOO_ROB",
+        "base.power_OOO_RS",
+        "base.power_OOO_RetireRAT",
+        "base.power_dcache_cache",
+        "base.power_dcache_miss",
+        "base_clustered_rs256_size16.cycles",
+        "base_clustered_rs256_size16.total_power",
+        "base_clustered_rs256_size16.power_BP",
+        "base_clustered_rs256_size16.power_Decoder",
+        "base_clustered_rs256_size16.power_FE_icache",
+        "base_clustered_rs256_size16.power_FE_icache_miss",
+        "base_clustered_rs256_size16.power_L2",
+        "base_clustered_rs256_size16.power_MemExec",
+        "base_clustered_rs256_size16.power_OOO_Exec_ALU",
+        "base_clustered_rs256_size16.power_OOO_Exec_FPU",
+        "base_clustered_rs256_size16.power_OOO_Exec_MUL",
+        "base_clustered_rs256_size16.power_OOO_FrontFreeList",
+        "base_clustered_rs256_size16.power_OOO_FrontRAT",
+        "base_clustered_rs256_size16.power_OOO_PipeRegs",
+        "base_clustered_rs256_size16.power_OOO_RF",
+        "base_clustered_rs256_size16.power_OOO_ROB",
+        "base_clustered_rs256_size16.power_OOO_RS",
+        "base_clustered_rs256_size16.power_OOO_RetireRAT",
+        "base_clustered_rs256_size16.power_dcache_cache",
+        "base_clustered_rs256_size16.power_dcache_miss"
+        ]]
+    ]
+}

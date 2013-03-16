@@ -1,0 +1,74 @@
+{
+    "configs": [
+        ["10M_BASECONFIG_base", "base"],
+
+        ["10M_BASECONFIG_ra", "RA"],
+        ["10M_BASECONFIG_effra", "RA_e"],
+    ],
+
+    "stats": [
+        "cycles",
+        "core_insn_fetched",
+        "core_insn_retired",
+        "core_macroinsn_retired",
+        "dram_latency",
+        "ra_enter_ra",
+        "ra_prefetch_l2",
+        "ra_prefetch_useless",
+        "ra_insn_retired",
+        "ra_insn_retired_addrslice",
+        "ra_insn_retired_addrbrslice",
+        "ra_insn_retired_beforelastmiss",
+        "ra_miss",
+        "ra_insn_per_period",
+        "ra_insn_addrslice_per_period",
+        "ra_insn_addrslice_fraction_per_period",
+        "ra_insn_addrbrslice_per_period",
+        "ra_insn_addrbrslice_fraction_per_period",
+        "ra_insn_beforelastmiss_per_period",
+        "ra_insn_beforelastmiss_fraction_per_period",
+        "ra_branch_per_period",
+        "ra_missbranch_per_period",
+        "ra_miss_per_period",
+        "exec",
+        "exec_ra",
+        "l2_*",
+        "engine_*",
+        "dram_access",
+        "probfilt_*",
+        "nuke*"
+    ],
+
+    "exprs": [
+        ["*", [
+                ["!IPC", "core_macroinsn_retired/cycles"],
+                ["!extra", "(exec-base.exec)/base.exec"],
+                ["!imp", "(!IPC-base.!IPC)/base.!IPC"],
+                ["!efficiency", "!imp / !extra"],
+                ["!ideal_extra", "RA.!extra * RA.ra_insn_addrbrslice_fraction_per_period"],
+                ["!rafrac", "exec_ra / RA.exec"],
+                ["!active_cyc", "engine_cycles_normal+engine_cycles_ra"],
+                ["!extra_active", "(!active_cyc - base.!active_cyc) / base.!active_cyc"],
+                ["!dropfrac", "probfilt_drop / probfilt_uop_seen_ra"]
+        ]]
+    ],
+
+    "accept": [
+        ["core_macroinsn_retired", ">=", 10000000],
+        ["nuke_deadlock", "==", 0]
+        ],
+
+    "sheets": [
+        ["BASECONFIG_data_all", "full", ["*"]],
+
+        ["BASECONFIG_imp", "benchsummary", ["RA*.!imp"]],
+        ["BASECONFIG_extra", "benchsummary", ["RA*.!extra"]],
+        ["BASECONFIG_extra_active", "benchsummary", ["RA*.!extra_active"]]
+    ],
+
+    "plots": [
+        ["BASECONFIG_imp", ["RA*"], "!imp", ["AVG"]],
+        ["BASECONFIG_extra", ["RA*"], "!extra", ["AVG"]],
+        ["BASECONFIG_extra_active", ["RA*"], "!extra_active", ["AVG"]]
+    ]
+}
