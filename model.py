@@ -286,6 +286,13 @@ class model:
 
             elif typ == 'benchsummary':
 
+                avg_grid = False
+                grouplen = 0
+                if len(o) > 3:
+                    options = o[3]
+                    if 'avg_grid' in options:
+                        avg_grid = True
+
                 benchmap = self.benchmap
                 benchnames = benchmap.values()
                 benchnames.sort()
@@ -314,11 +321,16 @@ class model:
                     else:
                         slist.append(statspec)
 
+                    statgroup = []
                     for c in clist:
                         for s in slist:
-                            statlist.append('%s.%s' % (c, s))
+                            statgroup.append('%s.%s' % (c, s))
+                    statlist.extend(statgroup)
 
-                output.write("Bench," + ','.join(statlist) + "\n")
+                    if (grouplen == 0): grouplen = len(statgroup)
+
+                if not avg_grid:
+                    output.write("Bench," + ','.join(statlist) + "\n")
 
                 geomean = [1.0 for i in range(len(statlist))]
                 arithmean = [0.0 for i in range(len(statlist))]
@@ -341,11 +353,28 @@ class model:
                             geomean[idx] *= math.pow(val, 1.0 / len(benchnames))
                             arithmean[idx] += val / len(benchnames)
                         idx += 1
-                    output.write(','.join(row) + "\n")
+                    if not avg_grid:
+                        output.write(','.join(row) + "\n")
 
-                output.write("\n")
-                output.write("GEOMEAN,%s\n" % (','.join(map(str, geomean))))
-                output.write("AVG,%s\n" % (','.join(map(str, arithmean))))
+                if not avg_grid:
+                    output.write("\n")
+                    output.write("GEOMEAN,%s\n" % (','.join(map(str, geomean))))
+                    output.write("AVG,%s\n" % (','.join(map(str, arithmean))))
+                else:
+                    header = [ "Bench" ]
+                    rows = [ [s.split('.')[0]] for s in statlist[0:grouplen] ]
+                    for (i, (statname, gmean)) in enumerate(zip(statlist, geomean)):
+                        rows[i % grouplen].append(str(gmean))
+                        if len(header) < len(rows[i % grouplen]):
+                            s = statname.split('.', 1)
+                            if len(s) > 1:
+                                s = s[1]
+                            else:
+                                s = s[0]
+                            header.append(s)
+                    for r in [header] + rows:
+                        output.write(','.join(r) + "\n")
+
 
             output.close()
 
