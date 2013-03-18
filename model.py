@@ -363,7 +363,7 @@ class model:
                 else:
                     header = [ "Bench" ]
                     rows = [ [s.split('.')[0]] for s in statlist[0:grouplen] ]
-                    for (i, (statname, gmean)) in enumerate(zip(statlist, geomean)):
+                    for (i, (statname, amean)) in enumerate(zip(statlist, arithmean)):
                         rows[i % grouplen].append(str(gmean))
                         if len(header) < len(rows[i % grouplen]):
                             s = statname.split('.', 1)
