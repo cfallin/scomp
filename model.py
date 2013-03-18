@@ -364,7 +364,7 @@ class model:
                     header = [ "Bench" ]
                     rows = [ [s.split('.')[0]] for s in statlist[0:grouplen] ]
                     for (i, (statname, amean)) in enumerate(zip(statlist, arithmean)):
-                        rows[i % grouplen].append(str(gmean))
+                        rows[i % grouplen].append(str(amean))
                         if len(header) < len(rows[i % grouplen]):
                             s = statname.split('.', 1)
                             if len(s) > 1:
