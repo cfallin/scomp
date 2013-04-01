@@ -53,7 +53,17 @@ class model:
         if len(self.varctx) > 0:
             prog = self.replvars(prog)
 
-        # first load specified configs
+        # get the list of stats
+        statsmatchers = []
+        if prog.has_key('stats'):
+            for x in prog['stats']:
+                x = '^' + x.replace('*', '.*') + '$'
+                r = re.compile(x)
+                statsmatchers.append(r)
+        else:
+            statsmatchers.append(re.compile('^.*$'))
+
+        # load specified configs
         self.configs = {}
         self.configlist = []
 
@@ -101,7 +111,7 @@ class model:
                 l = [ (longname, shortname) ]
 
             for p in l:
-                cfg = runs.Config(db, datadir + '/' + p[0], self.accept_rules, None, None, None, multisep)
+                cfg = runs.Config(db, statsmatchers, datadir + '/' + p[0], self.accept_rules, None, None, None, multisep)
                 self.configs[p[1]] = cfg
                 self.configlist.append(p[1])
                 self.exprs[p[1]] = {}
@@ -154,16 +164,6 @@ class model:
 
         stats_any = reduce(lambda x,y: x | y, statssets)
         stats_all = reduce(lambda x,y: x & y, statssets)
-
-        # get the list of stats
-        statsmatchers = []
-        if prog.has_key('stats'):
-            for x in prog['stats']:
-                x = '^' + x.replace('*', '.*') + '$'
-                r = re.compile(x)
-                statsmatchers.append(r)
-        else:
-            statsmatchers.append(re.compile('^.*$'))
 
         self.stats = []
         for m in statsmatchers:

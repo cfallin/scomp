@@ -8,18 +8,43 @@ import sys
 import glob
 import time
 
+def fastload(filename, statsmatchers):
+    if statsmatchers == None:
+        return json.load(open(filename))
+    else:
+        o = {}
+        for line in open(filename).readlines():
+            line = line.strip()
+            if line == '': continue
+            if line.find(':') == -1: continue
+            k, v = line.split(':')
+            if k.startswith('"') and k.endswith('"'): k = k[1:-1]
+            if v.endswith(','): v = v[:-1]
+            matched = False
+            for s in statsmatchers:
+                if s.match(k):
+                    matched = True
+                    break
+            if not matched: continue
+            try:
+                v = float(v)
+            except ValueError:
+                v = json.loads(v)
+            o[k] = v
+        return o
+
 # a run is a single simulation that produces a collection of stats
 class Run:
-    def __init__(self, db, filename, statmap, rules):
+    def __init__(self, db, statsmatchers, filename, statmap, rules):
         self.missing = True
         self.filename = filename
         if not self.try_deserialize(statmap, db):
             try:
-                self.dobj = json.load(open(filename))
+                self.dobj = fastload(filename, statsmatchers)
                 self.pobj = None
                 pname = os.path.dirname(filename) + '/power.out'
                 if os.path.exists(pname):
-                    self.pobj = json.load(open(pname))
+                    self.pobj = fastload(pname, statsmatchers)
                     self.dobj.update(self.pobj)
                 if self.try_accept(filename, self.dobj, statmap, rules):
                     self.missing = False
@@ -137,7 +162,7 @@ class MultiRun(Run):
 
 # a config is a set of runs over many benchmarks
 class Config:
-    def __init__(self, db, directory, rules, yieldfunc=None, statmap=None, benches=None, multisep=False):
+    def __init__(self, db, statsmatchers, directory, rules, yieldfunc=None, statmap=None, benches=None, multisep=False):
 
         self.directory = directory
         self.rules = rules
@@ -167,7 +192,7 @@ class Config:
                     bname = '%s.%d' % (rootname, idx)
                     self.benches.append(bname)
 
-        self.extract(db)
+        self.extract(statsmatchers, db)
 
     def read_weights(self):
         fname = self.directory + '/../WEIGHTS.dat'
@@ -179,7 +204,7 @@ class Config:
                 if (not self.weights.has_key(bench)): self.weights[bench] = []
                 self.weights[bench].append(weight)
 
-    def extract(self, db):
+    def extract(self, statsmatchers, db):
         stats = set()
         self.benches_present = set()
         for b in self.benches:
@@ -195,7 +220,7 @@ class Config:
 
             runs = []
             for fi in flist:
-                r = Run(db, fi, self.statmap, self.rules)
+                r = Run(db, statsmatchers, fi, self.statmap, self.rules)
                 runs.append(r)
 
             if len(runs) > 1:
