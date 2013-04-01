@@ -6,29 +6,32 @@ import os
 import os.path
 import sys
 import glob
+import time
 
 # a run is a single simulation that produces a collection of stats
 class Run:
-    def __init__(self, filename, statmap, rules):
+    def __init__(self, db, filename, statmap, rules):
         self.missing = True
         self.filename = filename
-        try:
-            self.dobj = json.load(open(filename))
-            self.pobj = None
-            pname = os.path.dirname(filename) + '/power.out'
-            if os.path.exists(pname):
-                self.pobj = json.load(open(pname))
-                self.dobj.update(self.pobj)
-            if self.try_accept(filename, self.dobj, statmap, rules):
-                self.missing = False
-            else:
-                #print "reject:", filename
+        if not self.try_deserialize(statmap, db):
+            try:
+                self.dobj = json.load(open(filename))
+                self.pobj = None
+                pname = os.path.dirname(filename) + '/power.out'
+                if os.path.exists(pname):
+                    self.pobj = json.load(open(pname))
+                    self.dobj.update(self.pobj)
+                if self.try_accept(filename, self.dobj, statmap, rules):
+                    self.missing = False
+                else:
+                    #print "reject:", filename
+                    self.dobj = {}
+            except:
                 self.dobj = {}
-        except:
-            self.dobj = {}
-        self.statmap = statmap
-        self.stats = {}
-        self.extract()
+            self.statmap = statmap
+            self.stats = {}
+            self.extract()
+            self.serialize(db)
 
     def statval(self, dobj, statmap, statname):
         t = statmap.stattype(statname)
@@ -53,6 +56,44 @@ class Run:
             s = self.statval(self.dobj, self.statmap, statname)
             if s is None: continue
             self.stats[statname] = s
+        self.dobj = None
+        self.pobj = None
+
+    def serialize(self, db):
+        if db is None: return
+        if not os.path.exists(self.filename): return
+        tstamp = os.lstat(self.filename).st_mtime
+        db['cache_' + self.filename + '_tstamp'] = str(int(tstamp))
+        db['cache_' + self.filename + '_stats'] = ','.join(self.stats.keys())
+        db['cache_' + self.filename + '_missing'] = str(self.missing)
+        if not self.missing:
+            for (k,v) in self.stats.items():
+                db['cache_' + self.filename + '_stat_' + k + '_type'] = str(type(v))
+                db['cache_' + self.filename + '_stat_' + k] = v.serialize()
+        print "saved", self.filename
+
+    def try_deserialize(self, statmap, db):
+        if db is None: return False
+        if not os.path.exists(self.filename): return
+        if not 'cache_' + self.filename + '_tstamp' in db: return
+        cur_tstamp = int(os.lstat(self.filename).st_mtime)
+        db_tstamp = int(db['cache_' + self.filename + '_tstamp'])
+
+        if cur_tstamp <= db_tstamp: 
+            try:
+                self.missing = bool(db['cache_' + self.filename + '_missing'])
+                if not self.missing:
+                    stats = db['cache_' + self.filename + '_stats'].split(',')
+                    for s in stats:
+                        t = db['cache_' + self.filename + '_stat_' + k + '_type']
+                        t = eval('%s(None, "%s", None)' % (t, s))
+                        t.deserialize(db['cache_' + self.filename + '_stat_' + k])
+                        self.stats[s] = t
+            except:
+                return False
+            print "loaded cached version of", self.filename
+            return True
+        return False
 
 # a multirun is a set of simulations (Runs) of different checkpoints on the same benchmark
 class MultiRun(Run):
@@ -96,7 +137,7 @@ class MultiRun(Run):
 
 # a config is a set of runs over many benchmarks
 class Config:
-    def __init__(self, directory, rules, yieldfunc=None, statmap=None, benches=None, multisep=False):
+    def __init__(self, db, directory, rules, yieldfunc=None, statmap=None, benches=None, multisep=False):
 
         self.directory = directory
         self.rules = rules
@@ -126,7 +167,7 @@ class Config:
                     bname = '%s.%d' % (rootname, idx)
                     self.benches.append(bname)
 
-        self.extract()
+        self.extract(db)
 
     def read_weights(self):
         fname = self.directory + '/../WEIGHTS.dat'
@@ -138,7 +179,7 @@ class Config:
                 if (not self.weights.has_key(bench)): self.weights[bench] = []
                 self.weights[bench].append(weight)
 
-    def extract(self):
+    def extract(self, db):
         stats = set()
         self.benches_present = set()
         for b in self.benches:
@@ -154,7 +195,7 @@ class Config:
 
             runs = []
             for fi in flist:
-                r = Run(fi, self.statmap, self.rules)
+                r = Run(db, fi, self.statmap, self.rules)
                 runs.append(r)
 
             if len(runs) > 1:
@@ -162,7 +203,7 @@ class Config:
             elif len(runs) == 1:
                 r = runs[0]
             else:
-                r = Run('/dev/null', self.statmap, self.rules)
+                r = Run(None, '/dev/null', self.statmap, self.rules)
 
             self.runs[b] = r
             for stat in r.stats.keys():
@@ -193,11 +234,12 @@ class Config:
 # a stat is a metric on a single benchmark run that can have either a scalar or
 # vector value.
 class Stat:
-    def __init__(self, dobj, name, opts):
+    def __init__(self, dobj, name, opts=None):
         self.dobj = dobj
         self.name = name
         self.opts = opts
-        self.extract()
+        if self.dobj != None:
+            self.extract()
 
     def extract(self):
         pass
@@ -207,6 +249,12 @@ class Stat:
 
     def values(self):
         return []
+
+    def serialize(self):
+        return ''
+
+    def deserialize(self, s):
+        pass
 
 # an AccumStat is a simple event count
 class AccumStat(Stat):
@@ -231,6 +279,12 @@ class AccumStat(Stat):
     def values(self):
         return 
 
+    def serialize(self):
+        return str(self._val)
+
+    def desserialize(self, s):
+        self._val = float(s)
+
 # a DistStat is a distribution
 class DistStat(Stat):
     def extract(self):
@@ -252,6 +306,14 @@ class DistStat(Stat):
 
     def values(self):
         return self._vals
+
+    def serialize(self):
+        return ','.join(map(str, [self._mean] + self._vals))
+
+    def desserialize(self, s):
+        l = map(float, s.split(','))
+        self._mean = l[0]
+        self._vals = l[1:]
 
 class CombinedStat(Stat):
     def __init__(self, dobj, name, opts, weights):
@@ -279,6 +341,15 @@ class CombinedStat(Stat):
 
     def values(self):
         return self._vals
+
+    def serialize(self):
+        return json.dumps({'mean': self._mean, 'weights': self._weights, 'vals': self._vals})
+
+    def desserialize(self, s):
+        o = json.loads(s)
+        self._mean = o['mean']
+        self._weights = o['weights']
+        self._vals = o['vals']
 
 # a StatMap is an object that tells us what type of stat a given named stat is
 class StatMap:

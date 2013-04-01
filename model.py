@@ -6,6 +6,10 @@ from parser import Expr
 import plot
 import glob
 import math
+try:
+    import bsddb.db
+except:
+    pass
 
 # represents all state
 class model:
@@ -62,6 +66,16 @@ class model:
         if prog.has_key('options') and 'multisep' in prog['options']:
             multisep = True
 
+        if False:
+            try:
+                db = bsddb.db.DB()
+                path = '/tmp/scomp_cache_' + os.path.abspath(datadir).replace('/', '_') + '.db'
+                db.open(path, flags=bsddb.db.DB_CREATE, dbtype=bsddb.db.DB_HASH)
+            except:
+                db = None
+        else:
+            db = None
+
         benchsets = []
         benchsets_present = []
         benchsets_absent = {}
@@ -87,7 +101,7 @@ class model:
                 l = [ (longname, shortname) ]
 
             for p in l:
-                cfg = runs.Config(datadir + '/' + p[0], self.accept_rules, None, None, None, multisep)
+                cfg = runs.Config(db, datadir + '/' + p[0], self.accept_rules, None, None, None, multisep)
                 self.configs[p[1]] = cfg
                 self.configlist.append(p[1])
                 self.exprs[p[1]] = {}
