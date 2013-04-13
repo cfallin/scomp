@@ -297,6 +297,9 @@ class AccumStat(Stat):
                     self._val = o[0]
             else:
                 self._val = 0.0
+        else:
+            print "unknown value for stat '%s': %s" % (self.name, str(o))
+            self._val = 0.0
 
     def value(self):
         return self._val
