@@ -40,11 +40,11 @@ class Run:
         self.filename = filename
         if not self.try_deserialize(statmap, db):
             try:
-                self.dobj = fastload(filename, statsmatchers)
+                self.dobj = json.load(open(filename))
                 self.pobj = None
                 pname = os.path.dirname(filename) + '/power.out'
                 if os.path.exists(pname):
-                    self.pobj = fastload(pname, statsmatchers)
+                    self.pobj = json.load(open(pname))
                     self.dobj.update(self.pobj)
                 if self.try_accept(filename, self.dobj, statmap, rules):
                     self.missing = False
