@@ -40,7 +40,7 @@ def load_json(filename):
         s = pipe.read()
         pipe.close()
     else:
-        f = open(filename, 'r').read()
+        f = open(filename, 'r')
         s = f.read()
         f.close()
     return json.loads(s)
@@ -56,7 +56,7 @@ class Run:
                 self.pobj = None
                 pname = os.path.dirname(filename) + '/power.out'
                 if os.path.exists(pname):
-                    self.pobj = load_json(pname + '.bz2')
+                    self.pobj = load_json(pname)
                     self.dobj.update(self.pobj)
                 if os.path.exists(pname + '.bz2'):
                     self.pobj = load_json(pname + '.bz2')
