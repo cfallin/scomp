@@ -33,6 +33,18 @@ def fastload(filename, statsmatchers):
             o[k] = v
         return o
 
+def load_json(filename):
+    s = ''
+    if filename.endswith('.bz2'):
+        pipe = os.popen('bzcat %s' % filename, 'r')
+        s = pipe.read()
+        pipe.close()
+    else:
+        f = open(filename, 'r').read()
+        s = f.read()
+        f.close()
+    return json.loads(s)
+
 # a run is a single simulation that produces a collection of stats
 class Run:
     def __init__(self, db, statsmatchers, filename, statmap, rules):
@@ -40,11 +52,14 @@ class Run:
         self.filename = filename
         if not self.try_deserialize(statmap, db):
             try:
-                self.dobj = json.load(open(filename))
+                self.dobj = load_json(filename)
                 self.pobj = None
                 pname = os.path.dirname(filename) + '/power.out'
                 if os.path.exists(pname):
-                    self.pobj = json.load(open(pname))
+                    self.pobj = load_json(pname + '.bz2')
+                    self.dobj.update(self.pobj)
+                if os.path.exists(pname + '.bz2'):
+                    self.pobj = load_json(pname + '.bz2')
                     self.dobj.update(self.pobj)
                 if self.try_accept(filename, self.dobj, statmap, rules):
                     self.missing = False
@@ -248,6 +263,8 @@ class Config:
         else:
             d = '%s/%s/sim.out' % (directory, bench)
         if os.path.exists(d):
+            return [d]
+        elif os.path.exists(d + '.bz2'):
             return [d]
         else:
             l = []
